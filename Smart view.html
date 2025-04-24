@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Share Your Idea</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      margin-top: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Share Your Idea</h1>
+
+  <form id="ideaForm">
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" required placeholder="Enter your name">
+
+    <label for="idea">Your Idea:</label>
+    <textarea id="idea" rows="5" required placeholder="Describe your idea here..."></textarea>
+
+    <button type="submit">Submit Idea</button>
+  </form>
+
+  <script>
+    document.getElementById("ideaForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const idea = document.getElementById("idea").value.trim();
+
+      if (name && idea) {
+        alert("Thanks, " + name + "! Your idea has been submitted:\n\n" + idea);
+        this.reset();
+      } else {
+        alert("Please fill in both fields.");
+      }
+    });
+  </script>
+
+</body>
+</html>
