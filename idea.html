@@ -1,60 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Share Your Idea</title>
-  <style>
-    body { margin:0; font-family:'Segoe UI',sans-serif; background:#01010a; color:#eee; display:flex; flex-direction:column; align-items:center; padding:20px;}
-    h1 { margin-top:40px; font-size:2.5rem; }
-    form { margin:20px 0; display:flex; flex-direction:column; width:100%; max-width:400px; }
-    input, textarea {
-      background: rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px;
-      padding:10px; margin-bottom:15px; color:#fff; font-size:1rem;
-    }
-    button {
-      padding:12px; font-size:1rem; background:#0057ff; border:none; border-radius:25px; color:#fff; cursor:pointer;
-    }
-    button:hover { background:#003fcc; }
-    ul { list-style:none; padding:0; width:100%; max-width:400px; }
-    li {
-      background: rgba(0,80,160,0.2); margin-bottom:10px; padding:10px; border-radius:6px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Share Your Idea</h1>
-  <form id="ideaForm">
-    <input id="name" type="text" placeholder="Your name" required />
-    <textarea id="idea" rows="4" placeholder="Your idea..." required></textarea>
-    <button type="submit">Share</button>
-  </form>
-  <ul id="ideasList"></ul>
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-  <script>
-    const form = document.getElementById('ideaForm');
-    const list = document.getElementById('ideasList');
-    const stored = JSON.parse(localStorage.getItem('ideas')||'[]');
-    stored.forEach(addIdeaToList);
+  const form = document.getElementById('ideaForm');
+  const list = document.getElementById('ideasList');
+  const loginBtn = document.getElementById('loginBtn');
+  const userInfo = document.getElementById('userInfo');
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const name = form.name.value.trim();
-      const idea = form.idea.value.trim();
-      if(!name||!idea) return;
-      const entry = { name, idea, time: Date.now() };
-      stored.push(entry);
-      localStorage.setItem('ideas', JSON.stringify(stored));
-      addIdeaToList(entry);
-      form.reset();
+  let currentUser = null;
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      userInfo.innerHTML = `Logged in as <b>${user.displayName}</b> (${user.email})`;
+      loginBtn.innerText = "Sign Out";
+    } else {
+      currentUser = null;
+      userInfo.innerHTML = "";
+      loginBtn.innerText = "Sign in with Google";
+    }
+  });
+
+  loginBtn.onclick = () => {
+    if (currentUser) {
+      auth.signOut();
+    } else {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    }
+  };
+
+  db.ref('ideas').on('value', snapshot => {
+    list.innerHTML = '';
+    snapshot.forEach(child => {
+      const data = child.val();
+      const id = child.key;
+      addIdeaToList(data, id);
     });
+  });
 
-    function addIdeaToList({ name, idea, time }) {
-      const li = document.createElement('li');
-      const ts = new Date(time).toLocaleString();
-      li.innerHTML = `<strong>${name}</strong> <em>(${ts})</em><br>${idea}`;
-      list.prepend(li);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (!currentUser) return alert("Please sign in to post your idea.");
+    const name = currentUser.displayName;
+    const email = currentUser.email;
+    const idea = form.idea.value.trim();
+    if (!idea) return;
+    const entry = { name, email, idea, time: Date.now() };
+    db.ref('ideas').push(entry);
+    form.reset();
+  });
+
+  function addIdeaToList(entry, id) {
+    const li = document.createElement('li');
+    const ts = new Date(entry.time).toLocaleString();
+    li.innerHTML = `
+      <strong>${entry.name}</strong> <em>(${ts})</em><br>${entry.idea}
+      ${currentUser && currentUser.email === entry.email ? `<br><button class="delBtn">Delete</button>` : ''}
+    `;
+    if (currentUser && currentUser.email === entry.email) {
+      li.querySelector('.delBtn').onclick = () => {
+        db.ref('ideas/' + id).remove();
+        li.remove();
+      };
     }
-  </script>
-</body>
-</html>
+    list.prepend(li);
+  }
+</script>
