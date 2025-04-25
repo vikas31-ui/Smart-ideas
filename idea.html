@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Share Your Idea</title>
+  <style>
+    body { margin:0; font-family:'Segoe UI',sans-serif; background:#01010a; color:#eee; display:flex; flex-direction:column; align-items:center; padding:20px;}
+    h1 { margin-top:40px; font-size:2.5rem; }
+    form { margin:20px 0; display:flex; flex-direction:column; width:100%; max-width:400px; }
+    input, textarea {
+      background: rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px;
+      padding:10px; margin-bottom:15px; color:#fff; font-size:1rem;
+    }
+    button {
+      padding:12px; font-size:1rem; background:#0057ff; border:none; border-radius:25px; color:#fff; cursor:pointer;
+    }
+    button:hover { background:#003fcc; }
+    ul { list-style:none; padding:0; width:100%; max-width:400px; }
+    li {
+      background: rgba(0,80,160,0.2); margin-bottom:10px; padding:10px; border-radius:6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Share Your Idea</h1>
+  <form id="ideaForm">
+    <input id="name" type="text" placeholder="Your name" required />
+    <textarea id="idea" rows="4" placeholder="Your idea..." required></textarea>
+    <button type="submit">Share</button>
+  </form>
+  <ul id="ideasList"></ul>
+
+  <script>
+    const form = document.getElementById('ideaForm');
+    const list = document.getElementById('ideasList');
+    const stored = JSON.parse(localStorage.getItem('ideas')||'[]');
+    stored.forEach(addIdeaToList);
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = form.name.value.trim();
+      const idea = form.idea.value.trim();
+      if(!name||!idea) return;
+      const entry = { name, idea, time: Date.now() };
+      stored.push(entry);
+      localStorage.setItem('ideas', JSON.stringify(stored));
+      addIdeaToList(entry);
+      form.reset();
+    });
+
+    function addIdeaToList({ name, idea, time }) {
+      const li = document.createElement('li');
+      const ts = new Date(time).toLocaleString();
+      li.innerHTML = `<strong>${name}</strong> <em>(${ts})</em><br>${idea}`;
+      list.prepend(li);
+    }
+  </script>
+</body>
+</html>
