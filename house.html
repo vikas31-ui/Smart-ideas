@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D House Simulation</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    // Set up
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(50, 50, 25);
+    scene.add(dirLight);
+
+    // Helpers
+    function createBox(w, h, d, color, x, y, z) {
+      const box = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color })
+      );
+      box.position.set(x, y, z);
+      scene.add(box);
+      return box;
+    }
+
+    function createPlane(w, h, color, x, y, z, ry = 0, rx = 0) {
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide })
+      );
+      plane.position.set(x, y, z);
+      plane.rotation.y = ry;
+      plane.rotation.x = rx;
+      scene.add(plane);
+      return plane;
+    }
+
+    // Ground Floor (0 - 9ft height)
+    createBox(40, 0.1, 15, 0x808080, 20, 0, 7.5); // Floor
+
+    // Exterior walls
+    createPlane(40, 9, 0xffffff, 20, 4.5, 0); // Front
+    createPlane(40, 9, 0xffffff, 20, 4.5, 15, Math.PI); // Back
+    createPlane(15, 9, 0xffffff, 0, 4.5, 7.5, Math.PI/2); // Left
+    createPlane(15, 9, 0xffffff, 40, 4.5, 7.5, -Math.PI/2); // Right
+
+    // Living/Dining
+    createBox(6, 2, 2, 0x00ff00, 5, 1, 2); // Sofa
+    createBox(3, 1, 1, 0x8b4513, 5, 0.5, 5); // Coffee Table
+    createBox(4, 2, 3, 0x8b4513, 12, 1, 10); // Dining Table
+    createPlane(4, 4, 0x0000ff, 5, 4, 0.01); // Window
+    createPlane(4, 4, 0x0000ff, 12, 4, 0.01); // Window
+    createPlane(3, 7, 0x8b4513, 8, 3.5, 0.01); // Main Door
+
+    // Kitchen
+    createBox(8, 2, 2, 0x8b4513, 29, 1, 14);
+    createBox(2, 2, 6, 0x8b4513, 34, 1, 10);
+    createBox(2, 4, 2, 0xc0c0c0, 27, 2, 14); // Fridge
+    createPlane(3, 3, 0x0000ff, 39.99, 4, 11, -Math.PI/2); // Window
+    createPlane(3, 7, 0x8b4513, 25.01, 3.5, 10, Math.PI/2); // Door
+
+    // Washroom
+    createBox(2, 4, 2, 0xc0c0c0, 37, 2, 14); // Washer/Dryer
+    createBox(1.5, 2, 1, 0xffffff, 38, 1, 12); // Sink
+    createPlane(2, 2, 0x0000ff, 39.99, 4, 13, -Math.PI/2); // Window
+    createPlane(2.5, 7, 0x8b4513, 35.01, 3.5, 12, Math.PI/2); // Door
+
+    // Stairs
+    const stair = createPlane(8, 9, 0x8b4513, 19, 4.5, 2);
+    stair.rotation.x = -Math.PI / 4;
+
+    // First Floor (9 - 18ft height)
+    createBox(40, 0.1, 15, 0x808080, 20, 9, 7.5); // Floor
+
+    // Exterior walls
+    createPlane(40, 9, 0xffffff, 20, 13.5, 0); // Front
+    createPlane(40, 9, 0xffffff, 20, 13.5, 15, Math.PI); // Back
+    createPlane(15, 9, 0xffffff, 0, 13.5, 7.5, Math.PI/2); // Left
+    createPlane(15, 9, 0xffffff, 40, 13.5, 7.5, -Math.PI/2); // Right
+
+    // Bedroom 1
+    createBox(6, 2, 5, 0x0000ff, 6, 10, 8); // Bed
+    createBox(6, 4, 2, 0xffffff, 3, 11, 2); // Wardrobe
+    createBox(3, 2, 2, 0x8b4513, 9, 10, 2); // Desk
+    createPlane(4, 4, 0x0000ff, 6, 13, 0.01); // Window
+    createPlane(4, 4, 0x0000ff, 0.01, 13, 6, Math.PI/2); // Window
+    createPlane(2.5, 7, 0x8b4513, 12.01, 12.5, 6, -Math.PI/2); // Door
+
+    // Bedroom 2
+    createBox(3, 2, 6, 0x0000ff, 28, 10, 10); // Bed
+    createBox(4, 4, 2, 0xffffff, 32, 11, 14); // Wardrobe
+    createBox(2.5, 2, 1.5, 0x8b4513, 30, 10, 6); // Desk
+    createPlane(3, 4, 0x0000ff, 34.99, 13, 10, -Math.PI/2); // Window
+    createPlane(2.5, 7, 0x8b4513, 25.01, 12.5, 10, Math.PI/2); // Door
+
+    // Bathroom
+    createBox(2, 4, 2, 0x808080, 37, 11, 12); // Shower
+    createBox(2, 2, 1, 0xffffff, 38, 10, 14); // Sink
+    createBox(1.5, 2, 2, 0xffffff, 36, 10, 14); // Toilet
+    createPlane(2, 2, 0x0000ff, 39.99, 13, 12, -Math.PI/2); // Window
+    createPlane(2.5, 7, 0x8b4513, 35.01, 12.5, 12, Math.PI/2); // Door
+
+    // Camera setup
+    camera.position.set(20, 25, 40);
+    camera.lookAt(20, 9, 7.5);
+
+    // Animate
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Responsive
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
